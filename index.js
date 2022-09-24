@@ -1,4 +1,6 @@
 //setup of cdn testing
+
+/*
 const include = () => {
     var tags, elem, temp, file 
 
@@ -41,3 +43,63 @@ document.body.prepend(menu, document.body.firstChild)
 
 //initiate
 include()
+
+*/
+
+/////////////////////
+
+document.querySelectorAll("template").forEach( t => {
+    customElements.define(t.id, 
+        class extends HTMLElement{
+            constructor(){
+                super()
+                let inner = this.innerHTML
+
+                let template = t
+                let content = t.content.cloneNode(true)
+               
+              
+                content.querySelectorAll('[name=slot]').forEach( s=> {
+                    s.innerHTML = inner;
+                    s.removeAttribute('name')
+                })
+                        
+                let data = Array.from(this.attributes)
+                    .map(a => [a.name, a.value])
+                    .reduce((acc, attr) => {
+                        
+                        acc[attr[0]] = attr[1]
+                        return acc
+                    },{})
+                  
+               
+                data.slot = inner
+
+                content.querySelectorAll('*').forEach( n => {
+                    n.innerHTML = n.innerHTML.replace(/{{(.*?)}}/g, (match)=> {
+                       return data[match.split(/{{|}}/).filter(Boolean)[0]] 
+                    })
+
+                    Object.keys(data).forEach( k => {
+                        if(n.getAttribute(k)){
+                        n.setAttribute(k ,  n.getAttribute(k).replace(/{{(.*?)}}/gi, (match)=> {
+                            console.log(match)
+                            return data[match.split(/{{|}}/).filter(Boolean)[0]] })
+                        )
+                        n.removeAttribute(k)
+                        }
+                    })
+                })
+
+                
+               let c = this.parentElement.replaceChild(content, this)
+            }
+        }
+    )
+    t.parentNode.removeChild(t)
+})
+
+
+document.querySelectorAll("script").forEach( s => { 
+    s.parentNode.removeChild(s)
+})
